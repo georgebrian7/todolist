@@ -1,0 +1,1 @@
+ <img src="/image.png" alt="mysql" width="100" height="40"/>

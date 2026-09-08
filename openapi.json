@@ -1,0 +1,59 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Task API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/tasks": {
+      "get": {
+        "summary": "List all tasks",
+        "responses": {
+          "200": { "description": "A list of tasks" }
+        }
+      },
+      "post": {
+        "summary": "Create a new task",
+        "responses": {
+          "201": { "description": "Task created" },
+          "400": { "description": "Invalid input" }
+        }
+      }
+       
+      
+    },
+     "/tasks/{id}": {
+        "parameters": [
+        {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" }
+        }
+        ],
+      "get": {
+        "summary": "List one task",
+        "responses": {
+          "200": { "description": "A single task" },
+          "404": { "description": "Task ${id} not found" }
+        }
+      },
+      "put": {
+        "summary": "replace task",
+        "responses": {
+          "200": { "description": "Task successfully replaced" },
+          "404": { "description": "Task ${id} not found" },
+          "400": { "description": "error:title or done is required" }
+        }
+      },
+       "delete": {
+        "summary": "delete task",
+        "responses": {
+          "204": { "description": "Task deleted" },
+          "404": { "description": "error:Task ${id} not found" }
+        }
+      }
+      
+    }
+  }
+}

@@ -1,9 +1,13 @@
 const fs = require('fs');
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const openapiSpec = require('./openapi.json');
+
+
 const app = express();
 app.use(express.json());
 const port=3000;
-
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 let tasks = [
   { id: 1, title: "cleaning", done: false },
   { id: 2, title: "bathing", done: true },
