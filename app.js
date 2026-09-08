@@ -1,6 +1,7 @@
 const fs = require('fs');
 const express = require('express');
 const app = express();
+app.use(express.json());
 const port=3000;
 
 let tasks = [
@@ -24,6 +25,20 @@ app.get('/tasks/:id', (req,res)=>{
 
 app.get('/', (req,res)=>{
     res.json({ "name":"Task API", "version":"1.0","endpoints":["/tasks"]})
+
+
+});
+app.post('/tasks', (req,res)=>{
+     const title=req.body.title
+     
+    if(!title){
+        res.status(400).json({"error":"Bad Request"})
+    }else{
+        const nextId = Math.max(...tasks.map(t => t.id)) + 1;
+        const newTask = { id: nextId, title: title, done: false };
+        tasks.push(newTask);
+        res.status(201).json(newTask);
+    }
 });
 app.get('/health',(req,res)=>{
     res.json({"status":"ok"})
