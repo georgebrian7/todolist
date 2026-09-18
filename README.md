@@ -40,3 +40,12 @@ Interactive API docs are served at `http://localhost:3000/docs`. Every endpoint 
 ![Swagger UI screenshot]
 
 <img src="/image.png" alt="mysql" width="500" height="500"/>
+
+Exploring the database directly
+
+The database can be opened and queried by hand in DB Browser for SQLite. Example query run in Stage 4:
+
+sql
+SELECT * FROM tasks WHERE done = 1;
+
+This returned only the tasks marked as completed — confirming the API and DB Browser read and write the exact same file, with no syncing step involved: a change made in one is visible in the other instantly.
