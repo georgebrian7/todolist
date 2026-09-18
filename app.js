@@ -49,11 +49,12 @@ app.post('/tasks', (req,res)=>{
      const title=req.body.title
      
     if(!title){
-        res.status(400).json({"error":"Bad Request"})
+        res.status(400).json({"error":"Title is required"})
     }else{
-        const nextId = Math.max(...tasks.map(t => t.id)) + 1;
-        const newTask = { id: nextId, title: title, done: false };
-        tasks.push(newTask);
+        const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
+        const result = insert.run(title, 0);
+
+        const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
         res.status(201).json(newTask);
     }
 });
