@@ -60,7 +60,7 @@ app.post('/tasks', (req,res)=>{
 });
 app.put('/tasks/:id', (req,res)=>{
     const id =Number(req.params.id);
-    const task =tasks.find(t => t.id ===id);
+    const task =db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
     if(!task){
         res.status(404).json({"error":`Task ${id} not found`})
         
@@ -71,23 +71,24 @@ app.put('/tasks/:id', (req,res)=>{
         else {
         if (req.body.title !== undefined) task.title = req.body.title;
         if (req.body.done !== undefined) task.done = req.body.done;
+        db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?')
+        .run(task.title, task.done ? 1 : 0, id);
         res.status(200).json(task);
     }
+       
     }
 
 });
-app.delete('/tasks/:id', (req,res)=>{
-    const id =Number(req.params.id);
-    const index =tasks.findIndex(t => t.id ===id);
-    if(index === -1){
-        res.status(404).json({"error":`Task ${id} not found`})
-    }else{
-        tasks.splice(index,1)
-        res.status(204).send()
+app.delete('/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
-    }
-
-
+  if (!task) {
+    res.status(404).json({ "error": `Task ${id} not found` });
+  } else {
+    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    res.status(204).send();
+  }
 });
 // .findIndex() instead of .find() — gives you the position in the array, or -1 if not found
 // .splice(index, 1) — removes one element at that position
