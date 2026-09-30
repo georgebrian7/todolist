@@ -64,49 +64,72 @@ app.get('/', (req,res)=>{
 
 
 });
-app.post('/tasks', (req,res)=>{
-     const title=req.body.title
-     
-    if(!title){
-        res.status(400).json({"error":"Title is required"})
-    }else{
-        const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
-        const result = insert.run(title, 0);
+app.post('/tasks', async (req, res) => {
+  try {
+    const { title, done = false } = req.body;
 
-        const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
-        res.status(201).json(newTask);
+    // Validation
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ error: 'Title is required' });
     }
+
+    const result = await pool.query(
+      `INSERT INTO tasks (title, done)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [title.trim(), done]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
-app.put('/tasks/:id', (req,res)=>{
-    const id =Number(req.params.id);
-    const task =db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-    if(!task){
-        res.status(404).json({"error":`Task ${id} not found`})
-        
-    }else{
-        if (req.body.title === undefined && req.body.done === undefined) {
-        res.status(400).json({"error": "title or done is required"});
-        } 
-        else {
-        if (req.body.title !== undefined) task.title = req.body.title;
-        if (req.body.done !== undefined) task.done = req.body.done;
-        db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?')
-        .run(task.title, task.done ? 1 : 0, id);
-        res.status(200).json(task);
-    }
-       
+app.put('/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, done } = req.body;
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ error: 'Title is required' });
     }
 
+    const result = await pool.query(
+      `UPDATE tasks
+       SET title = $1, done = $2
+       WHERE id = $3
+       RETURNING *`,
+      [title.trim(), done, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
-app.delete('/tasks/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+app.delete('/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  if (!task) {
-    res.status(404).json({ "error": `Task ${id} not found` });
-  } else {
-    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    const result = await pool.query(
+      'DELETE FROM tasks WHERE id = $1',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
     res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Database error' });
   }
 });
 // .findIndex() instead of .find() — gives you the position in the array, or -1 if not found
