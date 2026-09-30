@@ -1,30 +1,35 @@
+require('dotenv').config();
 const fs = require('fs');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapiSpec = require('./openapi.json');
-const Database = require('better-sqlite3');
-const db = new Database('tasks.db');
-
 const app = express();
 app.use(express.json());
 const port=3000;
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    done INTEGER NOT NULL DEFAULT 0
-  )
-`);
-const countRow = db.prepare('SELECT COUNT(*) AS count FROM tasks').get();
-if (countRow.count === 0) {
-  const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
-  insert.run('cleaning', 0);
-  insert.run('bathing', 1);
-  insert.run('dancing', 0);
-};
+const { Pool } = require('pg');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+async function setupDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      done BOOLEAN NOT NULL DEFAULT false
+    )
+  `);
 
+  const result = await pool.query('SELECT COUNT(*) FROM tasks');
+  const count = parseInt(result.rows[0].count);
+
+  if (count === 0) {
+    await pool.query('INSERT INTO tasks (title, done) VALUES ($1, $2)', ['cleaning', false]);
+    await pool.query('INSERT INTO tasks (title, done) VALUES ($1, $2)', ['bathing', true]);
+    await pool.query('INSERT INTO tasks (title, done) VALUES ($1, $2)', ['dancing', false]);
+  }
+}
+
+setupDatabase();
 app.get('/tasks', (req,res)=>{
     const tasks =db.prepare('SELECT * FROM tasks').all();
     res.json(tasks.map(t => ({ ...t, done: !!t.done })))
