@@ -3,10 +3,15 @@
 A small in-memory CRUD API for managing a to-do list, built with Node.js and Express as part of the FlyRank Internship Backend Track (Week 2, Assignment A1). Supports creating, reading, updating, and deleting tasks, with interactive documentation served through Swagger UI.
 
 ## How to run it
+You need Docker Desktop and nothing else.
 
-```bash
-npm install
-node app.js
+bash
+cp .env.example .env
+docker compose up
+
+The API is then available at http://localhost:3000. The tasks table is created automatically and seeded with 3 example tasks on the first run only.
+
+To stop it, run docker compose down. Your data is kept in a Docker volume, so it survives. Use docker compose down -v only if you want to wipe the data.
 ```
 
 The server starts on `http://localhost:3000`.
