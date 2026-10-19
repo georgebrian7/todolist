@@ -6,7 +6,7 @@ A small in-memory CRUD API for managing a to-do list, built with Node.js and Exp
 
 ```bash
 npm install
-node server.js
+node app.js
 ```
 
 The server starts on `http://localhost:3000`.
